@@ -41,6 +41,26 @@ CREATE TABLE sale_item (
     price NUMERIC(10,2) CHECK (price > 0)
 );
 
+CREATE ROLE admin_role;
+CREATE ROLE manager_role;
+CREATE ROLE cashier_role;
+
+CREATE USER admin_user WITH PASSWORD 'admin123';
+CREATE USER manager_user WITH PASSWORD 'manager123';
+CREATE USER cashier_user WITH PASSWORD 'cash123';
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin_role;
+
+GRANT SELECT, INSERT, UPDATE ON part, stock TO manager_role;
+GRANT SELECT ON supplier, category TO manager_role;
+
+GRANT SELECT, INSERT ON sale, sale_item TO cashier_role;
+GRANT SELECT ON part TO cashier_role;
+
+CREATE INDEX idx_part_name ON part(part_name);
+CREATE INDEX idx_stock_part ON stock(part_id);
+CREATE INDEX idx_sale_date ON sale(sale_date);
+
 INSERT INTO category (category_name) VALUES
 ('Engine Parts'),
 ('Brake System'),
