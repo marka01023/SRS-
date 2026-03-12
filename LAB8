@@ -1,0 +1,84 @@
+-------
+CREATE TABLE lab8_schema.customers (
+    customer_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+
+
+------
+CREATE TABLE lab8_schema.orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date DATE DEFAULT CURRENT_DATE,
+
+    CONSTRAINT fk_customer
+    FOREIGN KEY (customer_id)
+    REFERENCES lab8_schema.customers(customer_id)
+    ON DELETE CASCADE
+);
+
+-----
+
+ALTER TABLE lab8_schema.customers
+ADD CONSTRAINT chk_email
+CHECK (email LIKE '%@%');
+
+-- Тапсырыс күні болашақта болмауы керек
+ALTER TABLE lab8_schema.orders
+ADD CONSTRAINT chk_order_date
+CHECK (order_date <= CURRENT_DATE);
+
+------
+ALTER TABLE lab8_schema.customers
+ALTER COLUMN name SET NOT NULL;
+
+------
+BEGIN;
+
+INSERT INTO lab8_schema.customers(name, email)
+VALUES ('Aruzhan', 'aruzhan@example.com');
+
+INSERT INTO lab8_schema.orders(customer_id, order_date)
+VALUES (1, CURRENT_DATE);
+
+COMMIT;
+
+----
+BEGIN;
+
+INSERT INTO lab8_schema.orders(customer_id, order_date)
+VALUES (999, CURRENT_DATE);
+
+ROLLBACK;
+
+ALTER TABLE lab8_schema.orders
+DROP CONSTRAINT fk_customer;
+
+ALTER TABLE lab8_schema.orders
+ADD CONSTRAINT fk_customer
+FOREIGN KEY (customer_id)
+REFERENCES lab8_schema.customers(customer_id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+SELECT *
+FROM lab8_schema.orders o
+LEFT JOIN lab8_schema.customers c
+ON o.customer_id = c.customer_id
+WHERE c.customer_id IS NULL;
+
+------
+CREATE VIEW lab8_schema.v_order_summary AS
+SELECT
+    c.name,
+    COUNT(o.order_id) AS total_orders
+FROM lab8_schema.customers c
+LEFT JOIN lab8_schema.orders o
+ON c.customer_id = o.customer_id
+GROUP BY c.name;
+
+--=----
+GRANT SELECT
+ON lab8_schema.v_order_summary
+TO lab8_user;
